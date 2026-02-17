@@ -1,0 +1,223 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:accounts_curriculum_changelist' %}">Curricula</a>
+    &rsaquo; <a href="{% url 'admin:accounts_curriculum_change' curriculum_code %}">{{ curriculum_title }}</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <form method="post" id="term_form">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <p class="errornote">
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </p>
+        {% endif %}
+
+        <!-- ===== CONTEXT ===== -->
+        <fieldset class="module aligned">
+            <h2>Context</h2>
+            <div class="form-row">
+                <div>
+                    <label>Curriculum:</label>
+                    <p style="padding: 5px 0; font-weight: bold;">{{ curriculum_code }} - {{ curriculum_title }}</p>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ===== TERM IDENTIFIER ===== -->
+        <fieldset class="module aligned">
+            <h2>Term Identifier</h2>
+            <div class="form-row{% if form.term_id.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_term_id" class="required">Term ID:</label>
+                    {{ form.term_id }}
+                    {% if form.term_id.help_text %}
+                    <p class="help">{{ form.term_id.help_text }}</p>
+                    {% endif %}
+                    {% if form.term_id.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.term_id.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row{% if form.term_name.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_term_name" class="required">Term Name:</label>
+                    {{ form.term_name }}
+                    {% if form.term_name.help_text %}
+                    <p class="help">{{ form.term_name.help_text }}</p>
+                    {% endif %}
+                    {% if form.term_name.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.term_name.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ===== SCHEDULE ===== -->
+        <fieldset class="module aligned">
+            <h2>Schedule</h2>
+
+            <div class="form-row{% if form.year.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_year">Academic Year:</label>
+                    {{ form.year }}
+                    {% if form.year.help_text %}
+                    <p class="help">{{ form.year.help_text }}</p>
+                    {% endif %}
+                    {% if form.year.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.year.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row{% if form.trimester.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_trimester">Trimester:</label>
+                    {{ form.trimester }}
+                    {% if form.trimester.help_text %}
+                    <p class="help">{{ form.trimester.help_text }}</p>
+                    {% endif %}
+                    {% if form.trimester.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.trimester.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row{% if form.recommended_trimester.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_recommended_trimester">Recommended Trimester:</label>
+                    {{ form.recommended_trimester }}
+                    {% if form.recommended_trimester.help_text %}
+                    <p class="help">{{ form.recommended_trimester.help_text }}</p>
+                    {% endif %}
+                    {% if form.recommended_trimester.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.recommended_trimester.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row{% if form.typical_next_terms.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_typical_next_terms">Typical Next Terms:</label>
+                    {{ form.typical_next_terms }}
+                    {% if form.typical_next_terms.help_text %}
+                    <p class="help">{{ form.typical_next_terms.help_text }}</p>
+                    {% endif %}
+                    {% if form.typical_next_terms.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.typical_next_terms.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ===== CREDITS ===== -->
+        <fieldset class="module aligned">
+            <h2>Credits</h2>
+
+            <div class="form-row{% if form.min_credits.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_min_credits">Minimum Credits:</label>
+                    {{ form.min_credits }}
+                    {% if form.min_credits.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.min_credits.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row{% if form.max_credits.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_max_credits">Maximum Credits:</label>
+                    {{ form.max_credits }}
+                    {% if form.max_credits.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.max_credits.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row{% if form.total_credits_in_term.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_total_credits_in_term">Total Credits In Term:</label>
+                    {{ form.total_credits_in_term }}
+                    {% if form.total_credits_in_term.help_text %}
+                    <p class="help">{{ form.total_credits_in_term.help_text }}</p>
+                    {% endif %}
+                    {% if form.total_credits_in_term.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.total_credits_in_term.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ===== CRITICAL COURSES ===== -->
+        <fieldset class="module aligned collapse">
+            <h2>Critical Courses (Optional)</h2>
+            <div class="form-row{% if form.critical_courses.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_critical_courses">Critical Courses:</label>
+                    {{ form.critical_courses }}
+                    {% if form.critical_courses.help_text %}
+                    <p class="help">{{ form.critical_courses.help_text }}</p>
+                    {% endif %}
+                    {% if form.critical_courses.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.critical_courses.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ===== DESCRIPTION ===== -->
+        <fieldset class="module aligned collapse">
+            <h2>Description (Optional)</h2>
+            <div class="form-row{% if form.description.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_description">Description:</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.description.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Save" class="default" name="_save">
+            <a href="{{ cancel_url }}" class="closelink">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

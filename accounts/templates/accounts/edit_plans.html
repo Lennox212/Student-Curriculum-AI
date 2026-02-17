@@ -1,0 +1,1190 @@
+<!-- accounts/templates/accounts/edit_plans.html -->
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
+    <title>Edit Trimester Plans - Curriculum Planner</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0d1f3d 0%, #1a3a6b 25%, #2c5aa0 50%, #3d6db8 75%, #4a7ec7 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 15% 20%, rgba(255, 193, 7, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(255, 193, 7, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            animation: particleFloat 25s ease-in-out infinite;
+            z-index: 0;
+        }
+        
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            padding: 25px 40px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid rgba(255, 193, 7, 0.3);
+            z-index: 10;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.3), transparent);
+            animation: shimmer 4s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .header span {
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #ffffff 0%, #ffc107 50%, #ffffff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textShine 4s linear infinite;
+        }
+        
+        @keyframes textShine {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #0d1f3d;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.5);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .back-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .back-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(255, 193, 7, 0.7);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .plan-card {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.98) 0%, rgba(255, 202, 40, 0.98) 100%);
+            border: none;
+            border-radius: 30px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 
+                0 15px 50px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #2c5aa0, #ffc107, #2c5aa0);
+            border-radius: 30px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+        }
+        
+        .plan-card:hover::before {
+            opacity: 0.6;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 20px;
+        }
+        
+        .plan-header h3 {
+            margin: 0;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+        
+        .plan-header input {
+            padding: 14px 20px;
+            font-size: 1.2rem;
+            border: 3px solid #2c5aa0;
+            border-radius: 20px;
+            width: 400px;
+            transition: all 0.3s ease;
+            background: white;
+            font-weight: 600;
+        }
+        
+        .plan-header input:focus {
+            outline: none;
+            border-color: #ffc107;
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .course-list {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 20px;
+            margin-top: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .course-list h4 {
+            margin: 0 0 15px 0;
+            color: #2c5aa0;
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+        
+        .course-item {
+            padding: 18px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .course-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #2c5aa0, #ffc107);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .course-item:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .course-item:hover {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e8f4f8 100%);
+            transform: translateX(8px);
+        }
+        
+        .course-item:last-child {
+            border-bottom: none;
+        }
+        
+        .course-code {
+            font-weight: 800;
+            color: #2c5aa0;
+            font-size: 1.05rem;
+        }
+        
+        .btn-edit, .btn-save, .btn-cancel, .btn-delete, .btn-remove {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-left: 8px;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+            font-size: 0.95rem;
+        }
+        
+        .btn-edit, .btn-save, .btn-cancel {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.4);
+        }
+        
+        .btn-edit::before, .btn-save::before, .btn-cancel::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.4), transparent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+        
+        .btn-edit:hover::before, .btn-save:hover::before, .btn-cancel:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-edit:hover, .btn-save:hover, .btn-cancel:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.5);
+            color: #ffc107;
+        }
+        
+        .btn-delete, .btn-remove {
+            background: linear-gradient(135deg, #d9534f 0%, #c9302c 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(217, 83, 79, 0.4);
+        }
+        
+        .btn-delete:hover, .btn-remove:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(217, 83, 79, 0.5);
+        }
+        
+        .btn-edit:disabled, .btn-save:disabled {
+            background: linear-gradient(135deg, #ccc 0%, #999 100%);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .btn-edit:disabled:hover, .btn-save:disabled:hover {
+            transform: none;
+            color: white;
+        }
+        
+        .plan-details {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 30px;
+        }
+        
+        .plan-details p {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        
+        .plan-details strong {
+            color: #2c5aa0;
+            font-size: 1.3rem;
+        }
+        
+        .loading, .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            font-size: 1.3rem;
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .loading::before {
+            content: '⏳';
+            display: block;
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state::before {
+            content: '📚';
+            display: block;
+            font-size: 5rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-state a {
+            color: #ffc107;
+            font-weight: 800;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            padding: 12px 24px;
+            background: rgba(255, 193, 7, 0.2);
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        
+        .empty-state a:hover {
+            background: rgba(255, 193, 7, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .add-courses-section {
+            margin-top: 25px;
+            padding: 25px;
+            background: rgba(249, 249, 249, 0.95);
+            border-radius: 16px;
+            border: 3px solid #2c5aa0;
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.2);
+        }
+        
+        .add-courses-section h4 {
+            color: #2c5aa0;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+        
+        select[multiple] {
+            border: 3px solid #2c5aa0;
+            border-radius: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        select[multiple]:focus {
+            outline: none;
+            border-color: #ffc107;
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.2);
+        }
+        
+        select[multiple] option {
+            padding: 12px;
+            font-size: 0.95rem;
+        }
+        
+        select[multiple] option:disabled {
+            color: #999;
+            background: #f5f5f5;
+        }
+        
+        select[multiple] option:checked {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+        }
+        
+        .course-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        /* ======= Ultra-Enhanced PolyTech Companion Bubble ======= */
+        #companion-bubble {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 420px;
+            z-index: 9999;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            filter: drop-shadow(0 15px 60px rgba(0,0,0,0.4));
+            animation: bubbleEntrance 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes bubbleEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        #companion-bubble-header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 22px 28px;
+            border-radius: 30px 30px 0 0;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.5);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        #companion-bubble-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.3), transparent);
+            animation: headerShimmer 4s infinite;
+        }
+        
+        @keyframes headerShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        #companion-bubble-header:hover {
+            background: linear-gradient(135deg, #1a3a6b 0%, #2c5aa0 100%);
+        }
+        
+        #companion-bubble-header .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #companion-bubble-header .bubble-icon {
+            font-size: 1.6rem;
+            animation: bubbleIconPulse 2.5s infinite;
+            filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.8));
+        }
+        
+        @keyframes bubbleIconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        
+        #companion-bubble-header .minimize-icon {
+            font-size: 1.4rem;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #companion-bubble-header .minimize-icon:hover {
+            opacity: 1;
+            transform: scale(1.3) rotate(180deg);
+            color: #ffc107;
+        }
+        
+        #companion-bubble-body {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 0 0 30px 30px;
+            border: 2px solid rgba(44, 90, 160, 0.2);
+            border-top: none;
+            padding: 28px;
+            display: block;
+            max-height: 550px;
+            overflow-y: auto;
+        }
+        
+        .companion-welcome {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .important-notice {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            border: 3px solid #ffc107;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 22px;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: #856404;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+        
+        .important-notice .notice-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            animation: noticeWarningPulse 2.5s ease-in-out infinite;
+        }
+        
+        @keyframes noticeWarningPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        
+        #companion-bubble-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        
+        #companion-bubble-input {
+            flex: 1;
+            padding: 16px 22px;
+            border: 3px solid #e1e8ed;
+            border-radius: 30px;
+            font-size: 0.98rem;
+            transition: all 0.4s ease;
+            outline: none;
+        }
+        
+        #companion-bubble-input:focus {
+            border-color: #2c5aa0;
+            box-shadow: 0 0 0 5px rgba(44, 90, 160, 0.15);
+        }
+        
+        #companion-bubble-form button {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #0d1f3d;
+            border: none;
+            border-radius: 30px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5);
+        }
+        
+        #companion-bubble-form button:hover {
+            transform: translateY(-4px);
+        }
+        
+        #companion-bubble-log {
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+        }
+        
+        .companion-msg-user {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            padding: 14px 18px;
+            border-radius: 20px 20px 4px 20px;
+            margin: 12px 0;
+            margin-left: 15%;
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.4);
+        }
+        
+        .companion-msg-ai {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            color: #333;
+            padding: 14px 18px;
+            border-radius: 20px 20px 20px 4px;
+            margin: 12px 0;
+            margin-right: 15%;
+            border: 2px solid rgba(255, 193, 7, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+        
+        .typing-indicator {
+            display: flex;
+            gap: 6px;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            border-radius: 20px;
+            width: fit-content;
+            margin: 12px 0;
+            border: 2px solid rgba(255, 193, 7, 0.4);
+        }
+        
+        .typing-indicator span {
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, #2c5aa0, #1a3a6b);
+            border-radius: 50%;
+            animation: bubbleTyping 1.6s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes bubbleTyping {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.7; }
+            30% { transform: translateY(-14px); opacity: 1; }
+        }
+        
+        #companion-bubble-body[hidden] {
+            display: none !important;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px 25px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .plan-card {
+                padding: 25px 20px;
+            }
+            
+            .plan-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .plan-header input {
+                width: 100%;
+            }
+            
+            #companion-bubble {
+                width: calc(100% - 30px);
+                right: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span>Edit Your Plans</span>
+        <a href="{% url 'dashboard' %}" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <div id="edit-plans-app"></div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    plans: [],             
+                    isLoading: true,
+                    editingPlanId: null,    
+                    editedPlanName: '',
+                    editingCoursesForPlan: null,
+                    availableCourses: [],
+                    selectedCoursesToAdd: []
+                }
+            },
+            methods: {
+                async loadPlans() {
+                    try {
+                        const response = await fetch('/accounts/api/user-plans/');
+                        const data = await response.json();
+                        if (data.success) {
+                            this.plans = data.plans;
+                        }
+                    } catch (error) {
+                        console.error('Error loading plans:', error);
+                    } finally {
+                        this.isLoading = false;  
+                    }
+                },
+                
+                async loadAvailableCourses() {
+                    try {
+                        const response = await fetch('/accounts/api/available-courses/');
+                        const data = await response.json();
+                        if (response.ok) {
+                            this.availableCourses = data.courses;
+                        }
+                    } catch (error) {
+                        console.error('Error loading courses:', error);
+                    }
+                },
+                
+                startEditing(plan) {
+                    this.editedPlanName = plan.plan_name;
+                    this.editingPlanId = plan.plan_id;
+                },
+                
+                startEditingCourses(plan) {
+                    this.editingCoursesForPlan = plan.plan_id;
+                    this.loadAvailableCourses();
+                    this.selectedCoursesToAdd = [];
+                },
+                
+                async savePlanName(planId) {
+                    if (!this.editedPlanName.trim()) {
+                        alert('Please enter a plan name');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/accounts/update-plan/${planId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': this.getCsrfToken()
+                            },
+                            body: JSON.stringify({
+                                plan_name: this.editedPlanName
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            alert('Plan updated successfully!');
+                            this.editingPlanId = null;
+                            this.loadPlans();
+                        } else {
+                            alert('Error updating plan');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Network error');
+                    }
+                },
+                
+                async saveUpdatedCourses(plan) {
+                    const allCourses = [
+                        ...plan.selected_courses,
+                        ...this.selectedCoursesToAdd.map(c => ({
+                            id: c.id,
+                            code: c.course_code,
+                            name: c.course_name,
+                            credits: c.credits
+                        }))
+                    ];
+                    
+                    const totalCredits = allCourses.reduce((sum, c) => sum + c.credits, 0);
+                    
+                    try {
+                        const response = await fetch(`/accounts/update-plan/${plan.plan_id}/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': this.getCsrfToken()
+                            },
+                            body: JSON.stringify({
+                                selected_courses: allCourses,
+                                total_credits: totalCredits
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            alert('Courses updated successfully!');
+                            this.editingCoursesForPlan = null;
+                            this.selectedCoursesToAdd = [];
+                            this.loadPlans();
+                        } else {
+                            alert('Error updating courses');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Network error');
+                    }
+                },
+                
+                async removeCourseFromPlan(plan, courseToRemove) {
+                    if (!confirm(`Remove ${courseToRemove.code} from this plan?`)) {
+                        return;
+                    }
+                    
+                    const updatedCourses = plan.selected_courses.filter(c => c.id !== courseToRemove.id);
+                    const totalCredits = updatedCourses.reduce((sum, c) => sum + c.credits, 0);
+                    
+                    try {
+                        const response = await fetch(`/accounts/update-plan/${plan.plan_id}/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': this.getCsrfToken()
+                            },
+                            body: JSON.stringify({
+                                selected_courses: updatedCourses,
+                                total_credits: totalCredits
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.loadPlans();
+                        } else {
+                            alert('Error removing course');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Network error');
+                    }
+                },
+                
+                async deletePlan(planId) {
+                    if (!confirm('The selected plan will be permanently deleted. Continue?')) {
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch(`/accounts/delete-plan/${planId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': this.getCsrfToken()
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            alert('Plan deleted successfully!');
+                            this.loadPlans();
+                        } else {
+                            alert('Error deleting plan');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Network error');
+                    }
+                },
+                
+                getCsrfToken() {
+                    function getCookie(name) {
+                        let cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            const cookies = document.cookie.split(';');
+                            for (let i = 0; i < cookies.length; i++) {
+                                const cookie = cookies[i].trim();
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+                    return getCookie('csrftoken');
+                }
+            },
+            mounted() {
+                this.loadPlans();
+            },
+            template: `
+                <div class="container">
+                    <div v-if="isLoading" class="loading">
+                        <h3>Loading your plans...</h3>
+                    </div>
+                    
+                    <div v-else-if="plans.length === 0" class="empty-state">
+                        <h3>No plans yet</h3>
+                        <p><a href="/accounts/plan-next-trimester/">Create your first plan</a></p>
+                    </div>
+                    
+                    <div v-else>
+                        <div v-for="plan in plans" :key="plan.plan_id" class="plan-card">
+                            
+                            <div class="plan-header">
+                                <div v-if="editingPlanId !== plan.plan_id">
+                                    <h3 v-text="plan.plan_name"></h3>
+                                </div>
+                                
+                                <div v-else>
+                                    <input v-model="editedPlanName" />
+                                </div>
+                                
+                                <div>
+                                    <button v-if="editingPlanId !== plan.plan_id" 
+                                            @click="startEditing(plan)" 
+                                            class="btn-edit">
+                                        Edit Name
+                                    </button>
+                                    <button v-else 
+                                            @click="savePlanName(plan.plan_id)" 
+                                            class="btn-save">
+                                        Save
+                                    </button>
+                                    <button v-if="editingPlanId === plan.plan_id" 
+                                            @click="editingPlanId = null" 
+                                            class="btn-cancel">
+                                        Cancel
+                                    </button>
+                                    <button @click="deletePlan(plan.plan_id)" 
+                                            class="btn-delete">
+                                        Delete Plan
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="plan-details">
+                                <p><strong v-text="plan.total_credits"></strong> credits</p>
+                                <p><strong v-text="plan.selected_courses.length"></strong> courses</p>
+                            </div>
+                            
+                            <div class="course-list">
+                                <div class="course-list-header">
+                                    <h4>Courses:</h4>
+                                    <button v-if="editingCoursesForPlan !== plan.plan_id" 
+                                            @click="startEditingCourses(plan)" 
+                                            class="btn-edit">
+                                        Edit Courses
+                                    </button>
+                                    <button v-else 
+                                            @click="editingCoursesForPlan = null; selectedCoursesToAdd = []" 
+                                            class="btn-cancel">
+                                        Done Editing
+                                    </button>
+                                </div>
+                                
+                                <div v-if="plan.selected_courses.length === 0" style="color: #999; padding: 20px; text-align: center;">
+                                    No courses in this plan
+                                </div>
+                                
+                                <div v-for="course in plan.selected_courses" 
+                                    :key="course.id" 
+                                    class="course-item">
+                                    <div>
+                                        <span class="course-code" v-text="course.code"></span>
+                                        <span v-text="' - ' + course.name"></span>
+                                    </div>
+                                    <div>
+                                        <span v-text="'(' + course.credits + ' credits)'"></span>
+                                        <button v-if="editingCoursesForPlan === plan.plan_id"
+                                                @click="removeCourseFromPlan(plan, course)"
+                                                class="btn-remove"
+                                                style="margin-left: 10px; padding: 8px 16px; font-size: 0.9rem;">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="editingCoursesForPlan === plan.plan_id" class="add-courses-section">
+                                    <h4>Add Courses:</h4>
+                                    <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple courses</p>
+                                    
+                                    <select v-model="selectedCoursesToAdd" 
+                                            multiple 
+                                            style="width: 100%; min-height: 200px; padding: 10px;">
+                                        <option v-for="course in availableCourses" 
+                                                :value="course"
+                                                :key="course.id"
+                                                :disabled="!course.can_take || plan.selected_courses.some(c => c.id === course.id)">
+                                            <span v-text="course.course_code + ' - ' + course.course_name + ' (' + course.credits + ' credits)' + (course.can_take ? '' : ' [Prerequisites not met]')"></span>
+                                        </option>
+                                    </select>
+                                    
+                                    <button @click="saveUpdatedCourses(plan)" 
+                                            class="btn-save" 
+                                            style="margin-top: 15px; width: 100%;"
+                                            :disabled="selectedCoursesToAdd.length === 0">
+                                        <span v-text="'Add ' + selectedCoursesToAdd.length + ' Course' + (selectedCoursesToAdd.length !== 1 ? 's' : '')"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        }).mount('#edit-plans-app');
+    </script>
+
+    <!-- Ultra-Enhanced PolyTech Companion Bubble Widget -->
+    <div id="companion-bubble">
+        <div id="companion-bubble-header" onclick="toggleCompanionChat()">
+            <div class="header-left">
+                <span class="bubble-icon">🤖</span>
+                <span>PolyTech Companion</span>
+            </div>
+            <span class="minimize-icon">⊖</span>
+        </div>
+        <div id="companion-bubble-body">
+            <div class="companion-welcome">
+                Hi! I'm here to help with your academic journey
+            </div>
+            
+            <div class="important-notice">
+                <span class="notice-icon">⚠️</span>
+                <div>
+                    <strong>Important Notice:</strong>
+                    <span>This AI assistant is designed to help with academic guidance, but responses may occasionally contain errors or outdated information. Always verify important information with official sources, your academic advisor, or university documentation before making academic decisions.</span>
+                </div>
+            </div>
+            
+            <form id="companion-bubble-form" onsubmit="sendCompanionBubbleChat(event)">
+                <input type="text" id="companion-bubble-input" placeholder="Ask me anything..." autocomplete="off" required>
+                <button type="submit">Send</button>
+            </form>
+            
+            <div id="companion-bubble-log"></div>
+        </div>
+    </div>
+
+    <script>
+        let companionBubbleHistory = [];
+        let isTyping = false;
+
+        function toggleCompanionChat() {
+            const body = document.getElementById('companion-bubble-body');
+            const minimizeIcon = document.querySelector('.minimize-icon');
+            body.hidden = !body.hidden;
+            minimizeIcon.textContent = body.hidden ? '⊕' : '⊖';
+        }
+
+        function renderCompanionBubbleChat() {
+            const log = document.getElementById('companion-bubble-log');
+            let html = '';
+            
+            companionBubbleHistory.forEach(msg => {
+                if (msg.role === 'user') {
+                    html += `<div class="companion-msg-user"><strong>You</strong>${msg.content}</div>`;
+                } else if (msg.role === 'typing') {
+                    html += `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+                } else {
+                    html += `<div class="companion-msg-ai"><strong>Companion</strong>${msg.content}</div>`;
+                }
+            });
+            
+            log.innerHTML = html;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function sendCompanionBubbleChat(e) {
+            e.preventDefault();
+            const input = document.getElementById('companion-bubble-input');
+            const text = input.value.trim();
+            if (!text || isTyping) return;
+
+            companionBubbleHistory.push({role: "user", content: text});
+            renderCompanionBubbleChat();
+            input.value = '';
+            
+            isTyping = true;
+            companionBubbleHistory.push({role: "typing", content: ""});
+            renderCompanionBubbleChat();
+
+            try {
+                const response = await fetch("{% url 'ai_chatbot_page' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({
+                        messages: companionBubbleHistory.filter(m => m.role !== 'typing'),
+                        current_url: window.location.pathname,
+                        visible_menu: [],
+                        extra_context: null
+                    })
+                });
+
+                companionBubbleHistory = companionBubbleHistory.filter(m => m.role !== 'typing');
+                isTyping = false;
+
+                const data = await response.json();
+                if (response.ok && data.reply) {
+                    companionBubbleHistory.push({role: "assistant", content: data.reply});
+                } else {
+                    companionBubbleHistory.push({role: "assistant", content: "Sorry, I'm having trouble connecting right now. Please try again."});
+                }
+            } catch {
+                companionBubbleHistory = companionBubbleHistory.filter(m => m.role !== 'typing');
+                isTyping = false;
+                companionBubbleHistory.push({role: "assistant", content: "Network error. Please check your connection and try again."});
+            }
+            
+            renderCompanionBubbleChat();
+        }
+
+// Start with bubble closed
+        document.getElementById('companion-bubble-body').hidden = true;    </script>
+</body>
+</html>

@@ -1,0 +1,1093 @@
+<!-- accounts/templates/accounts/course_checklist.html -->
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
+    <title>Course Checklist - Curriculum Planner</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0d1f3d 0%, #1a3a6b 25%, #2c5aa0 50%, #3d6db8 75%, #4a7ec7 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 15% 20%, rgba(255, 193, 7, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(255, 193, 7, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            animation: particleFloat 25s ease-in-out infinite;
+            z-index: 0;
+        }
+        
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            padding: 25px 40px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid rgba(255, 193, 7, 0.3);
+            z-index: 10;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.3), transparent);
+            animation: shimmer 4s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #ffc107, #ffb300, #ffc107);
+            background-size: 200% 100%;
+            animation: gradientFlow 3s linear infinite;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 800;
+            text-shadow: 
+                2px 2px 4px rgba(0,0,0,0.3),
+                0 0 20px rgba(255, 193, 7, 0.4);
+            position: relative;
+            z-index: 1;
+            letter-spacing: 1.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffc107 50%, #ffffff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: textShine 4s linear infinite;
+        }
+        
+        @keyframes textShine {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .checklist-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .checklist-form {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.98) 0%, rgba(255, 202, 40, 0.98) 100%);
+            border: none;
+            border-radius: 40px;
+            padding: 50px;
+            box-shadow: 
+                0 20px 80px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .checklist-form::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: linear-gradient(45deg, #2c5aa0, #ffc107, #2c5aa0, #ffc107);
+            border-radius: 40px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+        }
+        
+        .checklist-form:hover::before {
+            opacity: 0.7;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .checklist-form h2 {
+            text-align: center;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+        }
+        
+        .checklist-form > p {
+            text-align: center;
+            color: #555;
+            margin-bottom: 40px;
+            font-size: 1.15rem;
+            font-weight: 500;
+        }
+        
+        .course-section {
+            margin-bottom: 35px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 25px;
+            border-bottom: 4px solid #2c5aa0;
+            padding-bottom: 12px;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, #ffc107, transparent);
+        }
+        
+        .course-item {
+            display: flex;
+            align-items: center;
+            padding: 18px 0;
+            border-bottom: 2px solid #f0f0f0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .course-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: linear-gradient(180deg, #2c5aa0, #ffc107);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+            border-radius: 0 3px 3px 0;
+        }
+        
+        .course-item:hover::before {
+            transform: scaleY(1);
+        }
+        
+        .course-item:hover {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e8f4f8 100%);
+            padding-left: 15px;
+            border-radius: 12px;
+        }
+        
+        .course-item:last-child {
+            border-bottom: none;
+        }
+        
+        .course-checkbox {
+            margin-right: 20px;
+            transform: scale(1.5);
+            cursor: pointer;
+            accent-color: #2c5aa0;
+        }
+        
+        .course-checkbox:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .course-item:has(.course-checkbox:disabled) {
+            opacity: 0.5;
+            background-color: #f5f5f5;
+            position: relative;
+        }
+        
+        .course-item:has(.course-checkbox:disabled):hover {
+            background-color: #f5f5f5;
+        }
+      
+        
+        .prerequisite-warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%);
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-left: 15px;
+            font-size: 0.8rem;
+            display: inline-block;
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.15);
+        }
+        
+        .prerequisite-warning strong {
+            color: #856404;
+            font-size: 0.8rem;
+            margin-right: 8px;
+        }
+        
+        .prerequisite-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: inline;
+        }
+        
+        .prerequisite-item {
+            display: inline;
+            color: #856404;
+            margin-right: 10px;
+            font-size: 0.8rem;
+        }
+        
+        .prerequisite-item:not(:last-child)::after {
+            content: '•';
+            margin-left: 10px;
+            color: #856404;
+        }
+        
+        .prerequisite-item.completed {
+            color: #28a745;
+        }
+        
+        .prerequisite-item.missing {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .course-info {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+        
+        .course-code {
+            font-weight: 800;
+            color: #2c5aa0;
+            font-size: 1.1rem;
+        }
+        
+        .course-name {
+            margin-left: 12px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .course-credits {
+            color: #666;
+            font-size: 0.95rem;
+            margin-left: 12px;
+            font-weight: 600;
+        }
+        
+        .progress-summary {
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 
+                0 10px 40px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            position: relative;
+        }
+        
+        .progress-summary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #2c5aa0, #ffc107, #2c5aa0);
+            background-size: 200% 100%;
+            animation: borderFlow 3s linear infinite;
+            border-radius: 25px 25px 0 0;
+        }
+        
+        @keyframes borderFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        .progress-summary strong {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #2c5aa0 0%, #ffc107 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .continue-btn {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 25px;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 
+                0 10px 35px rgba(44, 90, 160, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .continue-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.4), transparent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .continue-btn:hover::before {
+            width: 500px;
+            height: 500px;
+        }
+        
+        .continue-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 15px 45px rgba(44, 90, 160, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            color: #ffc107;
+        }
+        
+        .continue-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .continue-btn:disabled:hover {
+            transform: none;
+            color: white;
+        }
+        
+        .skip-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .skip-link a {
+            color: #2c5aa0;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .skip-link a:hover {
+            background: rgba(44, 90, 160, 0.1);
+            color: #1a3a6b;
+            transform: translateY(-2px);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 80px 40px;
+            font-size: 1.3rem;
+            color: white;
+        }
+        
+        .loading::before {
+            content: '⏳';
+            display: block;
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ======= Ultra-Enhanced PolyTech Companion Bubble ======= */
+        #companion-bubble {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 420px;
+            z-index: 9999;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            filter: drop-shadow(0 15px 60px rgba(0,0,0,0.4));
+            animation: bubbleEntrance 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes bubbleEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        #companion-bubble-header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 22px 28px;
+            border-radius: 30px 30px 0 0;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.5);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        #companion-bubble-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.3), transparent);
+            animation: headerShimmer 4s infinite;
+        }
+        
+        @keyframes headerShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        #companion-bubble-header:hover {
+            background: linear-gradient(135deg, #1a3a6b 0%, #2c5aa0 100%);
+        }
+        
+        #companion-bubble-header .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #companion-bubble-header .bubble-icon {
+            font-size: 1.6rem;
+            animation: bubbleIconPulse 2.5s infinite;
+            filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.8));
+        }
+        
+        @keyframes bubbleIconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        
+        #companion-bubble-header .minimize-icon {
+            font-size: 1.4rem;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #companion-bubble-header .minimize-icon:hover {
+            opacity: 1;
+            transform: scale(1.3) rotate(180deg);
+            color: #ffc107;
+        }
+        
+        #companion-bubble-body {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 0 0 30px 30px;
+            border: 2px solid rgba(44, 90, 160, 0.2);
+            border-top: none;
+            padding: 28px;
+            display: block;
+            max-height: 550px;
+            overflow-y: auto;
+        }
+        
+        .companion-welcome {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .important-notice {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            border: 3px solid #ffc107;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 22px;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: #856404;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+        
+        .important-notice .notice-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            animation: noticeWarningPulse 2.5s ease-in-out infinite;
+        }
+        
+        @keyframes noticeWarningPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        
+        #companion-bubble-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        
+        #companion-bubble-input {
+            flex: 1;
+            padding: 16px 22px;
+            border: 3px solid #e1e8ed;
+            border-radius: 30px;
+            font-size: 0.98rem;
+            transition: all 0.4s ease;
+            outline: none;
+        }
+        
+        #companion-bubble-input:focus {
+            border-color: #2c5aa0;
+            box-shadow: 0 0 0 5px rgba(44, 90, 160, 0.15);
+        }
+        
+        #companion-bubble-form button {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #0d1f3d;
+            border: none;
+            border-radius: 30px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5);
+        }
+        
+        #companion-bubble-form button:hover {
+            transform: translateY(-4px);
+        }
+        
+        #companion-bubble-log {
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+        }
+        
+        .companion-msg-user {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            padding: 14px 18px;
+            border-radius: 20px 20px 4px 20px;
+            margin: 12px 0;
+            margin-left: 15%;
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.4);
+        }
+        
+        .companion-msg-ai {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            color: #333;
+            padding: 14px 18px;
+            border-radius: 20px 20px 20px 4px;
+            margin: 12px 0;
+            margin-right: 15%;
+            border: 2px solid rgba(255, 193, 7, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+        
+        .typing-indicator {
+            display: flex;
+            gap: 6px;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            border-radius: 20px;
+            width: fit-content;
+            margin: 12px 0;
+            border: 2px solid rgba(255, 193, 7, 0.4);
+        }
+        
+        .typing-indicator span {
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, #2c5aa0, #1a3a6b);
+            border-radius: 50%;
+            animation: bubbleTyping 1.6s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes bubbleTyping {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.7; }
+            30% { transform: translateY(-14px); opacity: 1; }
+        }
+        
+        #companion-bubble-body[hidden] {
+            display: none !important;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px 25px;
+                font-size: 1.5rem;
+            }
+            
+            .checklist-container {
+                padding: 20px;
+            }
+            
+            .checklist-form {
+                padding: 30px 20px;
+                border-radius: 30px;
+            }
+            
+            .checklist-form h2 {
+                font-size: 2rem;
+            }
+            
+            #companion-bubble {
+                width: calc(100% - 30px);
+                right: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+    <h1>Mark Completed Courses</h1>
+    </div>
+    <div id="checklist-app"></div>
+    
+    {% csrf_token %}
+    
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script type="text/javascript">
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    courses: [], 
+                    completedCourses: new Set({{ completed_courses|safe }}), 
+                    isSubmitting: false,  
+                    isLoading: true,   
+                    totalCredits: 0,  
+                    completedCredits: 0 
+                }
+            },
+            template: `
+                <div class="checklist-container">
+                    <div v-if="isLoading" class="loading">
+                        <h3>Loading curriculum data...</h3>
+                    </div>
+                    
+                    <div v-else class="checklist-form">
+                        <h2>Select Courses You've Already Completed</h2>
+                        <p>Check all courses you have successfully completed. This will help us create your personalized study plan.</p>
+                        
+                        <div class="progress-summary">
+                            <strong>Progress: <span v-text="completedCredits"></span> / <span v-text="totalCredits"></span> credits completed</strong>
+                            <span style="color: #666; font-size: 1.1rem;"><span v-text="getProgressPercentage()"></span>% of curriculum</span>
+                        </div>
+                        
+                        <div class="course-section">
+                            <div class="section-title">All Courses</div>
+                            <div v-for="course in courses" :key="course.id" class="course-item">
+                                <input type="checkbox" 
+                                       :id="'course-' + course.id"
+                                       :value="course.id"
+                                       @change="toggleCourse(course)"
+                                       :checked="completedCourses.has(course.id)"
+                                       :disabled="!canTakeCourse(course)"
+                                       :title="getPrerequisiteMessage(course)"
+                                       class="course-checkbox">
+                                <label :for="'course-' + course.id" class="course-info">
+                                    <span class="course-code" v-text="course.course_code"></span>
+                                    <span class="course-name" v-text="course.course_name"></span>
+                                    <span class="course-credits" v-text="'(' + course.credits + ' credits)'"></span>
+                                </label>
+                                
+                                <!-- Inline prerequisite warning if course is locked -->
+                                <div v-if="!canTakeCourse(course)" class="prerequisite-warning">
+                                    <strong>🔒 Needs:</strong>
+                                    <ul class="prerequisite-list">
+                                        <li v-for="prereq in getPrerequisiteDetails(course)" 
+                                            :key="prereq.code"
+                                            :class="['prerequisite-item', prereq.completed ? 'completed' : 'missing']">
+                                            <span v-text="prereq.completed ? '✅' : '❌'"></span>
+                                            <span v-text="prereq.code"></span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button @click="saveCourseProgress" 
+                                :disabled="isSubmitting"
+                                class="continue-btn">
+                            <span v-if="isSubmitting">Saving Progress...</span>
+                            <span v-else>Save and Continue to Dashboard</span>
+                        </button>
+                        
+                        <div class="skip-link">
+                            <a href="#" @click.prevent="skipChecklist">Skip for now - I'll add courses later</a>
+                        </div>
+                    </div>
+                </div>
+            `,
+           
+            methods: {
+                async loadCourses() {
+                    try {
+                        const response = await fetch('/accounts/api/curriculum-courses/');
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            this.courses = data.courses;
+                            // Use total_credits from API response instead of calculating
+                            this.totalCredits = data.total_credits || data.courses.reduce((sum, course) => sum + course.credits, 0);
+                            this.completedCredits = this.courses
+                                .filter(course => this.completedCourses.has(course.id))
+                                .reduce((sum, course) => sum + course.credits, 0);
+                        } else {
+                            alert('Error loading courses: ' + (data.error || 'Unknown error'));
+                        }
+                    } catch (error) {
+                        console.error('Error loading courses:', error);
+                        alert('Network error loading courses. Please refresh the page.');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                
+                canTakeCourse(course) {
+                    // If no prerequisites, course is always available
+                    if (!course.prerequisites || course.prerequisites === '') {
+                        return true;
+                    }
+                    
+                    // Split prerequisites by common separators (comma, semicolon, "or", "and")
+                    // Example: "MATH1340" or "MATH1340, MATH1350" or "MATH1340 or MATH1341"
+                    const prereqList = course.prerequisites
+                        .split(/[,;]|(?:\s+(?:and|or)\s+)/i)
+                        .map(p => p.trim())
+                        .filter(p => p.length > 0);
+                    
+                    // Check if ALL prerequisites are completed
+                    return prereqList.every(prereq => this.completedCourses.has(prereq));
+                },
+                
+                getPrerequisiteMessage(course) {
+                    // If course can be taken, no message needed
+                    if (this.canTakeCourse(course)) {
+                        return '';
+                    }
+                    
+                    // Return helpful message about missing prerequisites
+                    return `🔒 Prerequisites required: ${course.prerequisites}`;
+                },
+                
+                getPrerequisiteDetails(course) {
+                    // Return empty array if no prerequisites
+                    if (!course.prerequisites || course.prerequisites === '') {
+                        return [];
+                    }
+                    
+                    // Split prerequisites and create detailed objects
+                    const prereqList = course.prerequisites
+                        .split(/[,;]|(?:\s+(?:and|or)\s+)/i)
+                        .map(p => p.trim())
+                        .filter(p => p.length > 0);
+                    
+                    // Map each prerequisite to an object with completion status
+                    return prereqList.map(prereqCode => ({
+                        code: prereqCode,
+                        completed: this.completedCourses.has(prereqCode)
+                    }));
+                },
+                
+                toggleCourse(course) {
+                    if (this.completedCourses.has(course.id)) {
+                        this.completedCourses.delete(course.id);
+                        this.completedCredits -= course.credits;
+                    } else {
+                        this.completedCourses.add(course.id);
+                        this.completedCredits += course.credits;
+                    }
+                },
+                
+                getProgressPercentage() {
+                    if (this.totalCredits === 0) return 0;
+                    return Math.round((this.completedCredits / this.totalCredits) * 100);
+                },
+                
+                async saveCourseProgress() {
+                    this.isSubmitting = true;
+                    try {
+                        const csrfToken = this.getCsrfToken();
+                        
+                        const response = await fetch('/accounts/save-course-progress/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: JSON.stringify({
+                                completed_courses: Array.from(this.completedCourses)
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok && data.success) {
+                            window.location.href = '/accounts/dashboard/';
+                        } else {
+                            alert('Error saving progress: ' + (data.errors ? data.errors.join(', ') : 'Unknown error'));
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Network error. Please try again.');
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                },
+                
+                async skipChecklist() {
+                    window.location.href = '/accounts/dashboard/';
+                },
+
+                getCsrfToken() {
+                    function getCookie(name) {
+                        let cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            const cookies = document.cookie.split(';');
+                            for (let i = 0; i < cookies.length; i++) {
+                                const cookie = cookies[i].trim();
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+                    return getCookie('csrftoken');
+                }
+            },
+            mounted() {
+                this.loadCourses();
+            }
+        }).mount('#checklist-app');
+    </script>
+
+    <div id="companion-bubble">
+        <div id="companion-bubble-header" onclick="toggleCompanionChat()">
+            <div class="header-left">
+                <span class="bubble-icon">🤖</span>
+                <span>PolyTech Companion</span>
+            </div>
+            <span class="minimize-icon">⊖</span>
+        </div>
+        <div id="companion-bubble-body">
+            <div class="companion-welcome">
+                Hi! I'm here to help with your academic journey
+            </div>
+            
+            <div class="important-notice">
+                <span class="notice-icon">⚠️</span>
+                <div>
+                    <strong>Important Notice:</strong>
+                    <span>This AI assistant is designed to help with academic guidance, but responses may occasionally contain errors or outdated information. Always verify important information with official sources, your academic advisor, or university documentation before making academic decisions.</span>
+                </div>
+            </div>
+            
+            <form id="companion-bubble-form" onsubmit="sendCompanionBubbleChat(event)">
+                <input type="text" id="companion-bubble-input" placeholder="Ask me anything..." autocomplete="off" required>
+                <button type="submit">Send</button>
+            </form>
+            
+            <div id="companion-bubble-log"></div>
+        </div>
+    </div>
+
+    <script>
+        let companionBubbleHistory = [];
+        let isTyping = false;
+
+        function toggleCompanionChat() {
+            const body = document.getElementById('companion-bubble-body');
+            const minimizeIcon = document.querySelector('.minimize-icon');
+            body.hidden = !body.hidden;
+            minimizeIcon.textContent = body.hidden ? '⊕' : '⊖';
+        }
+
+        function renderCompanionBubbleChat() {
+            const log = document.getElementById('companion-bubble-log');
+            let html = '';
+            
+            companionBubbleHistory.forEach(msg => {
+                if (msg.role === 'user') {
+                    html += `<div class="companion-msg-user"><strong>You</strong>${msg.content}</div>`;
+                } else if (msg.role === 'typing') {
+                    html += `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+                } else {
+                    html += `<div class="companion-msg-ai"><strong>Companion</strong>${msg.content}</div>`;
+                }
+            });
+            
+            log.innerHTML = html;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function sendCompanionBubbleChat(e) {
+            e.preventDefault();
+            const input = document.getElementById('companion-bubble-input');
+            const text = input.value.trim();
+            if (!text || isTyping) return;
+
+            companionBubbleHistory.push({role: "user", content: text});
+            renderCompanionBubbleChat();
+            input.value = '';
+            
+            isTyping = true;
+            companionBubbleHistory.push({role: "typing", content: ""});
+            renderCompanionBubbleChat();
+
+            try {
+                const response = await fetch("{% url 'ai_chatbot_page' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({
+                        messages: companionBubbleHistory.filter(m => m.role !== 'typing'),
+                        current_url: window.location.pathname,
+                        visible_menu: [],
+                        extra_context: null
+                    })
+                });
+
+                companionBubbleHistory = companionBubbleHistory.filter(m => m.role !== 'typing');
+                isTyping = false;
+
+                const data = await response.json();
+                if (response.ok && data.reply) {
+                    companionBubbleHistory.push({role: "assistant", content: data.reply});
+                } else {
+                    companionBubbleHistory.push({role: "assistant", content: "Sorry, I'm having trouble connecting right now. Please try again."});
+                }
+            } catch {
+                companionBubbleHistory = companionBubbleHistory.filter(m => m.role !== 'typing');
+                isTyping = false;
+                companionBubbleHistory.push({role: "assistant", content: "Network error. Please check your connection and try again."});
+            }
+            
+            renderCompanionBubbleChat();
+        }
+
+// Start with bubble closed
+        document.getElementById('companion-bubble-body').hidden = true;
+            </script>
+</body>
+</html>

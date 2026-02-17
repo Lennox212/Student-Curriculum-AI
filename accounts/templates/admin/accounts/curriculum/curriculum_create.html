@@ -1,0 +1,324 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:accounts_curriculum_changelist' %}">Curricula</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <form method="post" id="curriculum_form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <p class="errornote">
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </p>
+        {% endif %}
+
+        <!-- ===== CURRICULUM IDENTIFIER ===== -->
+        <fieldset class="module aligned">
+            <h2>Curriculum Identifier</h2>
+            <div class="form-row{% if form.code.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_code" class="required">Code:</label>
+                    {{ form.code }}
+                    {% if form.code.help_text %}
+                    <p class="help">{{ form.code.help_text }}</p>
+                    {% endif %}
+                    {% if form.code.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.code.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ===== CONCENTRATION DETAILS ===== -->
+        <fieldset class="module aligned">
+            <h2>Concentration Details</h2>
+
+            <div class="form-row{% if form.concentration_title.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_concentration_title" class="required">Program Title:</label>
+                    {{ form.concentration_title }}
+                    {% if form.concentration_title.help_text %}
+                    <p class="help">{{ form.concentration_title.help_text }}</p>
+                    {% endif %}
+                    {% if form.concentration_title.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.concentration_title.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row{% if form.concentration_code.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_concentration_code" class="required">Concentration Code:</label>
+                    {{ form.concentration_code }}
+                    {% if form.concentration_code.help_text %}
+                    <p class="help">{{ form.concentration_code.help_text }}</p>
+                    {% endif %}
+                    {% if form.concentration_code.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.concentration_code.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row{% if form.concentration_campus.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_concentration_campus">Campus:</label>
+                    {{ form.concentration_campus }}
+                    {% if form.concentration_campus.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.concentration_campus.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row{% if form.concentration_version.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_concentration_version" class="required">Version:</label>
+                    {{ form.concentration_version }}
+                    {% if form.concentration_version.help_text %}
+                    <p class="help">{{ form.concentration_version.help_text }}</p>
+                    {% endif %}
+                    {% if form.concentration_version.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.concentration_version.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ===== METADATA ===== -->
+        <fieldset class="module aligned collapse">
+            <h2>Metadata (Optional)</h2>
+
+            <div class="form-row">
+                <div>
+                    <label for="id_metadata_academic_years">Academic Years:</label>
+                    {{ form.metadata_academic_years }}
+                    {% if form.metadata_academic_years.help_text %}
+                    <p class="help">{{ form.metadata_academic_years.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="id_metadata_total_terms">Total Terms:</label>
+                    {{ form.metadata_total_terms }}
+                    {% if form.metadata_total_terms.help_text %}
+                    <p class="help">{{ form.metadata_total_terms.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="id_metadata_summer_terms">Summer Terms:</label>
+                    {{ form.metadata_summer_terms }}
+                    {% if form.metadata_summer_terms.help_text %}
+                    <p class="help">{{ form.metadata_summer_terms.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="id_metadata_start_year">Start Year:</label>
+                    {{ form.metadata_start_year }}
+                    {% if form.metadata_start_year.help_text %}
+                    <p class="help">{{ form.metadata_start_year.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="id_metadata_trimesters_per_year">Trimesters Per Year:</label>
+                    {{ form.metadata_trimesters_per_year }}
+                    {% if form.metadata_trimesters_per_year.help_text %}
+                    <p class="help">{{ form.metadata_trimesters_per_year.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ===== VALIDATION RULES ===== -->
+        <fieldset class="module aligned collapse">
+            <h2>Validation Rules (Optional)</h2>
+
+            <div class="form-row">
+                <div class="checkbox-row">
+                    {{ form.validation_prerequisite_enforcement }}
+                    <label for="id_validation_prerequisite_enforcement" class="vCheckboxLabel">
+                        {{ form.validation_prerequisite_enforcement.label }}
+                    </label>
+                    {% if form.validation_prerequisite_enforcement.help_text %}
+                    <p class="help">{{ form.validation_prerequisite_enforcement.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="checkbox-row">
+                    {{ form.validation_corequisite_bundling }}
+                    <label for="id_validation_corequisite_bundling" class="vCheckboxLabel">
+                        {{ form.validation_corequisite_bundling.label }}
+                    </label>
+                    {% if form.validation_corequisite_bundling.help_text %}
+                    <p class="help">{{ form.validation_corequisite_bundling.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="checkbox-row">
+                    {{ form.validation_check_term_availability }}
+                    <label for="id_validation_check_term_availability" class="vCheckboxLabel">
+                        {{ form.validation_check_term_availability.label }}
+                    </label>
+                    {% if form.validation_check_term_availability.help_text %}
+                    <p class="help">{{ form.validation_check_term_availability.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="id_validation_min_credits_for_full_time">Min Credits for Full-Time:</label>
+                    {{ form.validation_min_credits_for_full_time }}
+                    {% if form.validation_min_credits_for_full_time.help_text %}
+                    <p class="help">{{ form.validation_min_credits_for_full_time.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="id_validation_max_credits_per_term">Max Credits Per Term:</label>
+                    {{ form.validation_max_credits_per_term }}
+                    {% if form.validation_max_credits_per_term.help_text %}
+                    <p class="help">{{ form.validation_max_credits_per_term.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ===== AI RECOMMENDATION SETTINGS ===== -->
+        <fieldset class="module aligned collapse">
+            <h2>AI Recommendation Settings (Optional)</h2>
+
+            <div class="form-row">
+                <div class="checkbox-row">
+                    {{ form.ai_prioritize_critical_path }}
+                    <label for="id_ai_prioritize_critical_path" class="vCheckboxLabel">
+                        {{ form.ai_prioritize_critical_path.label }}
+                    </label>
+                    {% if form.ai_prioritize_critical_path.help_text %}
+                    <p class="help">{{ form.ai_prioritize_critical_path.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="checkbox-row">
+                    {{ form.ai_suggest_corequisite_bundles }}
+                    <label for="id_ai_suggest_corequisite_bundles" class="vCheckboxLabel">
+                        {{ form.ai_suggest_corequisite_bundles.label }}
+                    </label>
+                    {% if form.ai_suggest_corequisite_bundles.help_text %}
+                    <p class="help">{{ form.ai_suggest_corequisite_bundles.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="checkbox-row">
+                    {{ form.ai_warn_on_prerequisite_missing }}
+                    <label for="id_ai_warn_on_prerequisite_missing" class="vCheckboxLabel">
+                        {{ form.ai_warn_on_prerequisite_missing.label }}
+                    </label>
+                    {% if form.ai_warn_on_prerequisite_missing.help_text %}
+                    <p class="help">{{ form.ai_warn_on_prerequisite_missing.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="checkbox-row">
+                    {{ form.ai_suggest_summer_courses }}
+                    <label for="id_ai_suggest_summer_courses" class="vCheckboxLabel">
+                        {{ form.ai_suggest_summer_courses.label }}
+                    </label>
+                    {% if form.ai_suggest_summer_courses.help_text %}
+                    <p class="help">{{ form.ai_suggest_summer_courses.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="checkbox-row">
+                    {{ form.ai_allow_overload }}
+                    <label for="id_ai_allow_overload" class="vCheckboxLabel">
+                        {{ form.ai_allow_overload.label }}
+                    </label>
+                    {% if form.ai_allow_overload.help_text %}
+                    <p class="help">{{ form.ai_allow_overload.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="id_ai_default_credit_target">Default Credit Target:</label>
+                    {{ form.ai_default_credit_target }}
+                    {% if form.ai_default_credit_target.help_text %}
+                    <p class="help">{{ form.ai_default_credit_target.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ===== GRADUATION REQUIREMENTS ===== -->
+        <fieldset class="module aligned collapse">
+            <h2>Graduation Requirements (Optional)</h2>
+            <div class="form-row{% if form.graduation_requirements.errors %} errors{% endif %}">
+                <div>
+                    <label for="id_graduation_requirements">Requirements (JSON):</label>
+                    {{ form.graduation_requirements }}
+                    {% if form.graduation_requirements.help_text %}
+                    <p class="help">{{ form.graduation_requirements.help_text }}</p>
+                    {% endif %}
+                    {% if form.graduation_requirements.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.graduation_requirements.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="Save" class="default" name="_save">
+            <a href="{{ cancel_url }}" class="closelink">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

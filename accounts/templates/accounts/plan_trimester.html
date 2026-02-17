@@ -1,0 +1,1942 @@
+<!-- accounts/templates/accounts/plan_next_trimester.html -->
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plan Next Trimester - Curriculum Planner</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0d1f3d 0%, #1a3a6b 25%, #2c5aa0 50%, #3d6db8 75%, #4a7ec7 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 15% 20%, rgba(255, 193, 7, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(255, 193, 7, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            animation: particleFloat 25s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            padding: 25px 40px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid rgba(255, 193, 7, 0.3);
+            z-index: 10;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.3), transparent);
+            animation: shimmer 4s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .header span {
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #ffffff 0%, #ffc107 50%, #ffffff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textShine 4s linear infinite;
+        }
+
+        @keyframes textShine {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #0d1f3d;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.5);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .back-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .back-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(255, 193, 7, 0.7);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 30px auto;
+            padding: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============= AI SUGGESTION PANEL STYLING ============= */
+
+        .ai-suggestion-panel {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.98) 0%, rgba(255, 202, 40, 0.98) 100%);
+            border-radius: 30px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .ai-suggestion-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #2c5aa0, #ffc107, #2c5aa0);
+            background-size: 200% 100%;
+            animation: borderFlow 3s linear infinite;
+        }
+
+        @keyframes borderFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .ai-header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .ai-title-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .ai-icon {
+            max-width: 80px;
+            animation: aiPulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px rgba(44, 90, 160, 0.6));
+        }
+
+        @keyframes aiPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.15) rotate(5deg); }
+        }
+
+        .ai-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .ai-subtitle {
+            color: #555;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .get-suggestion-btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.5);
+        }
+
+        .get-suggestion-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 193, 7, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .get-suggestion-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .get-suggestion-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(44, 90, 160, 0.7);
+        }
+
+        .get-suggestion-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ai-disclaimer {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(44, 90, 160, 0.3);
+            border-radius: 18px;
+            padding: 18px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #555;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .disclaimer-icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .disclaimer-text strong {
+            color: #2c5aa0;
+            font-weight: 700;
+        }
+
+        /* AI Content Display */
+        .ai-suggestion-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .ai-loading {
+            text-align: center;
+            padding: 40px;
+            color: #2c5aa0;
+        }
+
+        .loading-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: loadingBounce 1s ease-in-out infinite;
+        }
+
+        @keyframes loadingBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .loading-subtext {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .ai-results {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .results-title {
+            color: #2c5aa0;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #2c5aa0;
+            position: relative;
+        }
+
+        .results-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 100px;
+            height: 3px;
+            background: #ffc107;
+        }
+
+        /* Suggested Course Cards */
+        .suggested-course {
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-left: 5px solid #2c5aa0;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .suggested-course:hover {
+            border-color: #2c5aa0;
+            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.2);
+            transform: translateX(5px);
+        }
+
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .suggested-course .course-code {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #2c5aa0;
+            letter-spacing: 0.5px;
+        }
+
+        .suggested-course .course-credits {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .suggested-course .course-name {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .ai-reasoning {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e8f4f8 100%);
+            border-left: 3px solid #ffc107;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .reasoning-title {
+            font-weight: 700;
+            color: #2c5aa0;
+            margin-bottom: 5px;
+        }
+
+        .reasoning-text {
+            color: #555;
+        }
+
+        .course-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .tag-high-priority {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+        }
+
+        .tag-medium-priority {
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #0d1f3d;
+        }
+
+        .tag-bottleneck {
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #0d1f3d;
+        }
+
+        .tag-balanced {
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+            color: white;
+        }
+
+        /* Accept Button */
+        .accept-suggestion-btn {
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 6px 20px rgba(81, 207, 102, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .accept-suggestion-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .accept-suggestion-btn:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .accept-suggestion-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(81, 207, 102, 0.6);
+        }
+
+        /* ============= EXISTING STYLES ============= */
+
+        .plan-header {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 30px;
+            border-radius: 25px;
+            margin-bottom: 30px;
+            box-shadow:
+                0 10px 40px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            position: relative;
+            overflow: hidden;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .plan-header::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #2c5aa0, #ffc107, #2c5aa0);
+            border-radius: 25px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        .plan-header:hover::before {
+            opacity: 0.6;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .plan-name-input {
+            width: 100%;
+            padding: 18px 24px;
+            font-size: 1.2rem;
+            border: 3px solid #2c5aa0;
+            border-radius: 20px;
+            margin-bottom: 0;
+            transition: all 0.3s ease;
+            background: white;
+            font-weight: 600;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .plan-name-input:focus {
+            outline: none;
+            border-color: #ffc107;
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .panel {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.98) 0%, rgba(255, 202, 40, 0.98) 100%);
+            border: none;
+            border-radius: 30px;
+            padding: 35px;
+            box-shadow:
+                0 15px 50px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #2c5aa0, #ffc107, #2c5aa0);
+            background-size: 200% 100%;
+            animation: borderFlow 3s linear infinite;
+        }
+
+        .panel:hover {
+            transform: translateY(-5px);
+        }
+
+        .panel-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #2c5aa0;
+            position: relative;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-title::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #ffc107, transparent);
+        }
+
+        .filter-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #2c5aa0;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 15px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #2c5aa0;
+            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+        }
+
+        .courses-list {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 15px;
+            max-height: 600px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+            scrollbar-width: thin;
+            scrollbar-color: #2c5aa0 #f0f0f0;
+        }
+
+        .courses-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .courses-list::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        .courses-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #2c5aa0, #1a3a6b);
+            border-radius: 10px;
+        }
+
+        .course-item {
+            background: white;
+            border: 2px solid rgba(44, 90, 160, 0.2);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .course-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: linear-gradient(180deg, #2c5aa0, #ffc107);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .course-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .course-item:hover {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e8f4f8 100%);
+            border-color: #2c5aa0;
+            transform: translateX(8px);
+            box-shadow: 0 8px 25px rgba(44, 90, 160, 0.2);
+        }
+
+        .course-item.locked {
+            opacity: 0.6;
+            background: #f5f5f5;
+        }
+
+        .course-item.locked:hover {
+            transform: translateX(0);
+        }
+
+        .course-info {
+            flex-grow: 1;
+        }
+
+        .course-code {
+            font-weight: 800;
+            color: #2c5aa0;
+            font-size: 1.15rem;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        .course-name {
+            color: #333;
+            margin: 5px 0;
+            font-weight: 500;
+        }
+
+        .course-credits {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .course-prereqs {
+            color: #d9534f;
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .course-btn {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .course-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 193, 7, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        .course-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .course-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.5);
+        }
+
+        .course-btn.remove {
+            background: linear-gradient(135deg, #d9534f 0%, #c9302c 100%);
+        }
+
+        .course-btn.remove:hover {
+            box-shadow: 0 6px 20px rgba(217, 83, 79, 0.5);
+        }
+
+        .course-btn:disabled {
+            background: linear-gradient(135deg, #ccc 0%, #999 100%);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .course-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .summary-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow:
+                0 8px 30px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2c5aa0, #ffc107, #2c5aa0);
+            background-size: 200% 100%;
+            animation: borderFlow 3s linear infinite;
+        }
+
+        .credit-display {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #2c5aa0 0%, #ffc107 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%);
+            border: 3px solid #ffc107;
+            padding: 16px;
+            border-radius: 16px;
+            margin: 15px 0;
+            color: #856404;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+            position: relative;
+        }
+
+        .warning::before {
+            content: '⚠️';
+            position: absolute;
+            left: 16px;
+            font-size: 1.3rem;
+        }
+
+        .warning {
+            padding-left: 50px;
+        }
+
+        .warning.danger {
+            background: linear-gradient(135deg, #f8d7da 0%, #fce4e6 100%);
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .warning.danger::before {
+            content: '🚨';
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            border: none;
+            padding: 20px 35px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow:
+                0 8px 30px rgba(44, 90, 160, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .save-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.4), transparent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .save-btn:hover::before {
+            width: 500px;
+            height: 500px;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-5px);
+            box-shadow:
+                0 12px 40px rgba(44, 90, 160, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            color: #ffc107;
+        }
+
+        .save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .save-btn:disabled:hover {
+            transform: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 60px 20px;
+            font-size: 1.1rem;
+        }
+
+        .empty-state::before {
+            content: '📚';
+            display: block;
+            font-size: 4rem;
+            margin-bottom: 15px;
+            opacity: 0.3;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 80px;
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        .loading::before {
+            content: '⏳';
+            display: block;
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .saved-plans {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .saved-plans strong {
+            color: #2c5aa0;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .plan-list-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid #e1e8ed;
+            transition: all 0.3s ease;
+        }
+
+        .plan-list-item:hover {
+            border-color: #2c5aa0;
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.2);
+        }
+
+        /* ======= PolyTech Companion Bubble ======= */
+        #companion-bubble {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 420px;
+            z-index: 9999;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            filter: drop-shadow(0 15px 60px rgba(0,0,0,0.4));
+            animation: bubbleEntrance 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes bubbleEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        #companion-bubble-header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 22px 28px;
+            border-radius: 30px 30px 0 0;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.5);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 193, 7, 0.3);
+        }
+
+        #companion-bubble-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.3), transparent);
+            animation: headerShimmer 4s infinite;
+        }
+
+        @keyframes headerShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        #companion-bubble-header:hover {
+            background: linear-gradient(135deg, #1a3a6b 0%, #2c5aa0 100%);
+        }
+
+        #companion-bubble-header .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        #companion-bubble-header .bubble-icon {
+            font-size: 1.6rem;
+            animation: bubbleIconPulse 2.5s infinite;
+            filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.8));
+        }
+
+        @keyframes bubbleIconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        #companion-bubble-header .minimize-icon {
+            font-size: 1.4rem;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        #companion-bubble-header .minimize-icon:hover {
+            opacity: 1;
+            transform: scale(1.3) rotate(180deg);
+            color: #ffc107;
+        }
+
+        #companion-bubble-body {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 0 0 30px 30px;
+            border: 2px solid rgba(44, 90, 160, 0.2);
+            border-top: none;
+            padding: 28px;
+            display: block;
+            max-height: 550px;
+            overflow-y: auto;
+        }
+
+        .companion-welcome {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .important-notice {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            border: 3px solid #ffc107;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 22px;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: #856404;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .important-notice .notice-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            animation: noticeWarningPulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes noticeWarningPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        #companion-bubble-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        #companion-bubble-input {
+            flex: 1;
+            padding: 16px 22px;
+            border: 3px solid #e1e8ed;
+            border-radius: 30px;
+            font-size: 0.98rem;
+            transition: all 0.4s ease;
+            outline: none;
+        }
+
+        #companion-bubble-input:focus {
+            border-color: #2c5aa0;
+            box-shadow: 0 0 0 5px rgba(44, 90, 160, 0.15);
+        }
+
+        #companion-bubble-form button {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+            color: #0d1f3d;
+            border: none;
+            border-radius: 30px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5);
+        }
+
+        #companion-bubble-form button:hover {
+            transform: translateY(-4px);
+        }
+
+        #companion-bubble-log {
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+        }
+
+        .companion-msg-user {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3a6b 100%);
+            color: white;
+            padding: 14px 18px;
+            border-radius: 20px 20px 4px 20px;
+            margin: 12px 0;
+            margin-left: 15%;
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.4);
+        }
+
+        .companion-msg-ai {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            color: #333;
+            padding: 14px 18px;
+            border-radius: 20px 20px 20px 4px;
+            margin: 12px 0;
+            margin-right: 15%;
+            border: 2px solid rgba(255, 193, 7, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 6px;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            border-radius: 20px;
+            width: fit-content;
+            margin: 12px 0;
+            border: 2px solid rgba(255, 193, 7, 0.4);
+        }
+
+        .typing-indicator span {
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, #2c5aa0, #1a3a6b);
+            border-radius: 50%;
+            animation: bubbleTyping 1.6s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bubbleTyping {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.7; }
+            30% { transform: translateY(-14px); opacity: 1; }
+        }
+
+        #companion-bubble-body[hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .ai-header-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .get-suggestion-btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .ai-suggestion-panel {
+                padding: 20px;
+            }
+
+            #companion-bubble {
+                width: calc(100% - 30px);
+                right: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span>CURRICULUM PLANNER - Plan Next Trimester</span>
+        <a href="{% url 'dashboard' %}" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <div id="plan-app"></div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    planName: '',
+                    allCourses: [],
+                    completedCourses: [],
+                    selectedCourses: [],
+                    totalCredits: 0,
+                    isLoading: true,
+                    filterComponent: 'all',
+                    filterAvailability: 'available',
+                    searchQuery: '',
+                    savedPlans: [],
+                    aiSuggestion: null,
+                    isLoadingAI: false,
+                    showAISuggestion: false
+                }
+            },
+            computed: {
+                filteredCourses() {
+                    let filtered = this.allCourses;
+
+                    if (this.filterComponent !== 'all') {
+                        filtered = filtered.filter(c => c.component === this.filterComponent);
+                    }
+
+                    if (this.filterAvailability === 'available') {
+                        filtered = filtered.filter(c => c.can_take);
+                    } else if (this.filterAvailability === 'locked') {
+                        filtered = filtered.filter(c => !c.can_take);
+                    }
+
+                    if (this.searchQuery.trim()) {
+                        const query = this.searchQuery.toLowerCase();
+                        filtered = filtered.filter(c =>
+                            c.course_code.toLowerCase().includes(query) ||
+                            c.course_name.toLowerCase().includes(query)
+                        );
+                    }
+
+                    return filtered;
+                },
+                uniqueComponents() {
+                    const components = new Set(this.allCourses.map(c => c.component));
+                    return Array.from(components).sort();
+                },
+                creditWarnings() {
+                    const warnings = [];
+                    if (this.totalCredits > 16) {
+                        warnings.push({
+                            type: 'danger',
+                            message: `You have selected ${this.totalCredits} credits. This exceeds the recommended 16 credit limit!`
+                        });
+                    }
+                    if (this.totalCredits > 0 && this.totalCredits < 12) {
+                        warnings.push({
+                            type: 'warning',
+                            message: `You have only ${this.totalCredits} credits selected. Minimum enrollment is typically 12 credits.`
+                        });
+                    }
+                    return warnings;
+                }
+            },
+            methods: {
+                async getAISuggestion() {
+                    this.isLoadingAI = true;
+                    this.showAISuggestion = true;
+                    this.aiSuggestion = null;
+
+                    try {
+                        const requestData = {
+                            completed_courses: this.completedCourses,
+                            available_courses: this.allCourses.filter(c => c.can_take)
+                        };
+
+                        console.log('Sending to AI:', requestData);
+
+                        const response = await fetch('/accounts/api/structured-ai-suggestion/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': this.getCsrfToken()
+                            },
+                            body: JSON.stringify(requestData)
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            this.aiSuggestion = data.suggestion;
+                            console.log('AI Suggestion:', this.aiSuggestion);
+                        } else {
+                            alert('Error getting AI suggestion: ' + (data.error || 'Unknown error'));
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Network error getting AI suggestion');
+                    } finally {
+                        this.isLoadingAI = false;
+                    }
+                },
+
+                acceptAISuggestion() {
+                    if (!this.aiSuggestion) return;
+
+                    // Clear current selection
+                    this.selectedCourses = [];
+                    this.totalCredits = 0;
+
+                    let addedCount = 0;
+
+                    // Add each suggested course
+                    this.aiSuggestion.suggested_courses.forEach(suggestedCourse => {
+                        // Try exact match first
+                        let course = this.allCourses.find(c => c.course_code === suggestedCourse.course_code);
+
+                        // If not found, try partial match (AI might use underscores)
+                        if (!course) {
+                            const aiCode = suggestedCourse.course_code.replace(/_/g, ' ').toLowerCase();
+                            course = this.allCourses.find(c =>
+                                c.course_code.toLowerCase().includes(aiCode) ||
+                                c.course_name.toLowerCase() === suggestedCourse.course_name.toLowerCase()
+                            );
+                        }
+
+                        if (course && course.can_take) {
+                            this.selectedCourses.push(course);
+                            this.totalCredits += course.credits;
+                            addedCount++;
+                        } else {
+                            console.log('Could not add course:', suggestedCourse.course_code, suggestedCourse.course_name);
+                        }
+                    });
+
+                    // Auto-generate plan name if empty
+                    if (!this.planName.trim()) {
+                        const date = new Date();
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        this.planName = `AI Suggested - ${months[date.getMonth()]} ${date.getDate()}`;
+                    }
+
+                    if (addedCount > 0) {
+                        alert(`✅ ${addedCount} courses added to your plan!`);
+                    } else {
+                        alert('⚠️ Could not add courses. The AI suggested courses that are not in your available courses list.');
+                    }
+                },
+
+                async loadCourses() {
+                    try {
+                        const response = await fetch('/accounts/api/available-courses/');
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            this.allCourses = data.courses;
+                        } else {
+                            alert('Error loading courses');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Network error loading courses');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
+                async loadCompletedCourses() {
+                    try {
+                        const response = await fetch('/accounts/api/completed-courses/');
+                        const data = await response.json();
+                        if (data.success) {
+                            this.completedCourses = data.completed_courses;
+                        }
+                    } catch (error) {
+                        console.error('Error loading completed courses:', error);
+                    }
+                },
+
+                async loadSavedPlans() {
+                    try {
+                        const response = await fetch('/accounts/api/user-plans/');
+                        const data = await response.json();
+                        if (data.success) {
+                            this.savedPlans = data.plans;
+                        }
+                    } catch (error) {
+                        console.error('Error loading plans:', error);
+                    }
+                },
+
+                addCourse(course) {
+                    if (!course.can_take) {
+                        alert(`Cannot add ${course.course_code}. Missing prerequisites: ${course.missing_prerequisites.join(', ')}`);
+                        return;
+                    }
+
+                    if (this.selectedCourses.find(c => c.id === course.id)) {
+                        alert('Course already added to plan');
+                        return;
+                    }
+
+                    this.selectedCourses.push(course);
+                    this.totalCredits += course.credits;
+                },
+
+                removeCourse(course) {
+                    const index = this.selectedCourses.findIndex(c => c.id === course.id);
+                    if (index > -1) {
+                        this.selectedCourses.splice(index, 1);
+                        this.totalCredits -= course.credits;
+                    }
+                },
+
+                async savePlan() {
+                    if (!this.planName.trim()) {
+                        alert('Please enter a plan name');
+                        return;
+                    }
+
+                    if (this.selectedCourses.length === 0) {
+                        alert('Please select at least one course');
+                        return;
+                    }
+
+                    if (this.totalCredits > 16) {
+                        if (!confirm(`You have ${this.totalCredits} credits (over 16 limit). Save anyway?`)) {
+                            return;
+                        }
+                    }
+
+                    try {
+                        const response = await fetch('/accounts/save-trimester-plan/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': this.getCsrfToken()
+                            },
+                            body: JSON.stringify({
+                                plan_name: this.planName,
+                                selected_courses: this.selectedCourses.map(c => ({
+                                    id: c.id,
+                                    code: c.course_code,
+                                    name: c.course_name,
+                                    credits: c.credits
+                                })),
+                                total_credits: this.totalCredits
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            alert('Plan saved successfully!');
+                            this.planName = '';
+                            this.selectedCourses = [];
+                            this.totalCredits = 0;
+                            this.loadSavedPlans();
+                        } else {
+                            alert('Error saving plan');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Network error');
+                    }
+                },
+
+                getCsrfToken() {
+                    function getCookie(name) {
+                        let cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            const cookies = document.cookie.split(';');
+                            for (let i = 0; i < cookies.length; i++) {
+                                const cookie = cookies[i].trim();
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+                    return getCookie('csrftoken');
+                }
+            },
+            mounted() {
+                this.loadCompletedCourses();
+                this.loadCourses();
+                this.loadSavedPlans();
+            },
+
+            template: `
+                <div class="container">
+                    <div v-if="isLoading" class="loading">
+                        <h3>Loading courses...</h3>
+                    </div>
+
+                    <div v-else>
+                        <!-- AI Suggestion Panel -->
+                        <div class="ai-suggestion-panel">
+
+                            <div class="ai-header-section">
+                                <div class="ai-title-group">
+                                     <img src="{% static 'castor_emoji.png' %}" alt="Castor AI Assistant" class="ai-icon">
+                                    <div>
+                                        <div class="ai-title">AI Course Planner</div>
+                                        <small class="ai-subtitle">Let AI analyze your progress and suggest an optimal plan</small>
+                                    </div>
+                                </div>
+
+                                <button @click="getAISuggestion"
+                                        :disabled="isLoadingAI"
+                                        class="get-suggestion-btn">
+                                    <span v-if="isLoadingAI">Analyzing...</span>
+                                    <span v-else>✨ Get AI Suggestion</span>
+                                </button>
+                            </div>
+
+                            <div class="ai-disclaimer">
+                                <span class="disclaimer-icon">💡</span>
+                                <div class="disclaimer-text">
+                                    <strong>How it works:</strong> Our AI analyzes your completed courses, prerequisites, graduation requirements, and course difficulty to create a balanced, optimal plan. It considers bottleneck courses, workload distribution, and your path to graduation.
+                                </div>
+                            </div>
+
+                            <!-- AI Suggestion Display -->
+                            <div v-if="showAISuggestion" class="ai-suggestion-content">
+
+                                <!-- Loading State -->
+                                <div v-if="isLoadingAI" class="ai-loading">
+                                    <div class="loading-icon">🤖</div>
+                                    <div class="loading-text">Analyzing your academic progress...</div>
+                                    <small class="loading-subtext">Checking prerequisites, workload, and graduation path</small>
+                                </div>
+
+                                <!-- AI Results -->
+                                <div v-else-if="aiSuggestion" class="ai-results">
+                                    <h3 class="results-title">
+                                        🎯 AI-Recommended Plan for Next Trimester
+                                    </h3>
+
+                                    <!-- Suggested Courses -->
+                                    <div v-for="course in aiSuggestion.suggested_courses"
+                                         :key="course.course_code"
+                                         class="suggested-course">
+
+                                        <div class="course-header">
+                                        <span class="course-code" v-text="course.course_code.replace(/_/g, ' ')"></span>
+                                        <span class="course-credits" v-text="course.credits + ' Credits'"></span>
+                                        </div>
+
+                                        <div class="course-name" v-text="course.course_name"></div>
+                                        <div class="ai-reasoning">
+                                            <div class="reasoning-title">Why AI recommends this:</div>
+                                        <div class="reasoning-text" v-text="course.reasoning"></div>
+                                        </div>
+
+                                        <div class="course-tags">
+                                            <span v-if="course.priority === 'high'" class="tag tag-high-priority">
+                                                🔥 High Priority
+                                            </span>
+                                            <span v-if="course.priority === 'medium'" class="tag tag-medium-priority">
+                                                ⚡ Medium Priority
+                                            </span>
+                                            <span v-if="course.is_bottleneck" class="tag tag-bottleneck">
+                                                ⚠️ Unlocks Future Courses
+                                            </span>
+                                            <span v-else class="tag tag-balanced">
+                                                ✓ Balanced Difficulty
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Accept Button -->
+                                    <button @click="acceptAISuggestion" class="accept-suggestion-btn">
+                                        ✓ Accept AI Suggestion & Add to Plan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="plan-header">
+                            <input v-model="planName"
+                                   class="plan-name-input"
+                                   maxlength="30"
+                                   placeholder="Enter plan name (e.g., Fall 2025 Trimester - Plan A)">
+                        </div>
+
+                        <div class="main-content">
+                            <div class="panel">
+                                <div class="panel-title">Available Courses</div>
+
+                                <div class="filter-section">
+                                    <div class="filter-group">
+                                        <label>Search Courses</label>
+                                        <input v-model="searchQuery"
+                                               type="text"
+                                               placeholder="Search by code or name...">
+                                    </div>
+
+                                    <div class="filter-group">
+                                        <label>Filter by Component</label>
+                                        <select v-model="filterComponent">
+                                            <option value="all">All Components</option>
+                                           <option v-for="comp in uniqueComponents" :value="comp" v-text="comp"></option>
+
+
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div class="filter-group">
+                                        <label>Availability</label>
+                                        <select v-model="filterAvailability">
+                                            <option value="all">All Courses</option>
+                                            <option value="available">Available Only</option>
+                                            <option value="locked">Locked (Missing Prerequisites)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="courses-list">
+                                    <div v-for="course in filteredCourses"
+                                         :key="course.id"
+                                         :class="['course-item', {locked: !course.can_take}]">
+                                        <div class="course-info">
+                                            <div class="course-code" v-text="course.course_code"></div>
+                                            <div class="course-name" v-text="course.course_name"></div>
+                                            <div class="course-credits" v-text="course.credits + ' credits'"></div>
+                                            <div v-if="!course.can_take && course.missing_prerequisites.length"
+                                                 class="course-prereqs">
+                                                <span v-text="'Missing: ' + course.missing_prerequisites.join(', ')"></span>
+                                            </div>
+                                        </div>
+                                        <button @click="addCourse(course)"
+                                                class="course-btn"
+                                                :disabled="!course.can_take"
+                                                v-text="course.can_take ? '+ Add' : '🔒 Locked'">
+                                        </button>
+                                    </div>
+
+                                    <div v-if="filteredCourses.length === 0" class="empty-state">
+                                        No courses match your filters
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="panel">
+                                <div class="panel-title">Your Plan</div>
+
+                                <div class="summary-box">
+                                    <div class="credit-display" v-text="totalCredits + ' Credits'"></div>
+                                    <div v-text="selectedCourses.length + ' courses selected'"></div>
+                                </div>
+
+                                <div v-for="warning in creditWarnings"
+                                     :class="['warning', warning.type]"
+                                     v-text="warning.message">
+                                </div>
+
+                                <div class="courses-list">
+                                    <div v-if="selectedCourses.length === 0" class="empty-state">
+                                        No courses selected yet<br>
+                                        <small>Add courses from the left panel</small>
+                                    </div>
+
+                                    <div v-for="course in selectedCourses"
+                                         :key="course.id"
+                                         class="course-item">
+                                        <div class="course-info">
+                                            <div class="course-code" v-text="course.course_code"></div>
+                                            <div class="course-name" v-text="course.course_name"></div>
+                                            <div class="course-credits" v-text="course.credits + ' credits'"></div>
+                                        </div>
+                                        <button @click="removeCourse(course)"
+                                                class="course-btn remove">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button @click="savePlan"
+                                        class="save-btn"
+                                        :disabled="selectedCourses.length === 0 || !planName.trim()">
+                                    Save Plan
+                                </button>
+
+                                <!-- Validation message that appears when button is disabled -->
+                                <div v-if="!planName.trim()" class="warning info">
+                                    Please enter a plan name above to save
+                                </div>
+                                <div v-else-if="selectedCourses.length === 0" class="warning info">
+                                    Please select at least one course to save your plan
+                                </div>
+
+
+                                <div v-if="savedPlans.length > 0" class="saved-plans">
+                                    <strong v-text="'Saved Plans (' + savedPlans.length + ')'"></strong>
+                                    <div v-for="plan in savedPlans" class="plan-list-item">
+                                        <div>
+                                            <strong v-text="plan.plan_name"></strong><br>
+                                            <small v-text="plan.total_credits + ' credits • ' + plan.selected_courses.length + ' courses'"></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        }).mount('#plan-app');
+    </script>
+
+    <!-- PolyTech Companion Bubble Widget -->
+    <div id="companion-bubble">
+        <div id="companion-bubble-header" onclick="toggleCompanionChat()">
+            <div class="header-left">
+                <span class="bubble-icon">🤖</span>
+                <span>PolyTech Companion</span>
+            </div>
+            <span class="minimize-icon">⊖</span>
+        </div>
+        <div id="companion-bubble-body">
+            <div class="companion-welcome">
+                Hi! I'm here to help with your academic journey
+            </div>
+
+            <div class="important-notice">
+                <span class="notice-icon">⚠️</span>
+                <div>
+                    <strong>Important Notice:</strong>
+                    <span>This AI assistant is designed to help with academic guidance, but responses may occasionally contain errors or outdated information. Always verify important information with official sources, your academic advisor, or university documentation before making academic decisions.</span>
+                </div>
+            </div>
+
+            <form id="companion-bubble-form" onsubmit="sendCompanionBubbleChat(event)">
+                <input type="text" id="companion-bubble-input" placeholder="Ask me anything..." autocomplete="off" required>
+                <button type="submit">Send</button>
+            </form>
+
+            <div id="companion-bubble-log"></div>
+        </div>
+    </div>
+
+    <script>
+        let companionBubbleHistory = [];
+        let isTyping = false;
+
+        function toggleCompanionChat() {
+            const body = document.getElementById('companion-bubble-body');
+            const minimizeIcon = document.querySelector('.minimize-icon');
+            body.hidden = !body.hidden;
+            minimizeIcon.textContent = body.hidden ? '⊕' : '⊖';
+        }
+
+        function renderCompanionBubbleChat() {
+            const log = document.getElementById('companion-bubble-log');
+            let html = '';
+
+            companionBubbleHistory.forEach(msg => {
+                if (msg.role === 'user') {
+                    html += `<div class="companion-msg-user"><strong>You:</strong> ${msg.content}</div>`;
+                } else if (msg.role === 'typing') {
+                    html += `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+                } else {
+                    html += `<div class="companion-msg-ai"><strong>Companion:</strong> ${msg.content}</div>`;
+                }
+            });
+
+            log.innerHTML = html;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function sendCompanionBubbleChat(e) {
+            e.preventDefault();
+            const input = document.getElementById('companion-bubble-input');
+            const text = input.value.trim();
+            if (!text || isTyping) return;
+
+            companionBubbleHistory.push({role: "user", content: text});
+            renderCompanionBubbleChat();
+            input.value = '';
+
+            isTyping = true;
+            companionBubbleHistory.push({role: "typing", content: ""});
+            renderCompanionBubbleChat();
+
+            try {
+                const response = await fetch("{% url 'ai_chatbot_page' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({
+                        messages: companionBubbleHistory.filter(m => m.role !== 'typing'),
+                        current_url: window.location.pathname,
+                        visible_menu: [],
+                        extra_context: null
+                    })
+                });
+
+                companionBubbleHistory = companionBubbleHistory.filter(m => m.role !== 'typing');
+                isTyping = false;
+
+                const data = await response.json();
+                if (response.ok && data.reply) {
+                    companionBubbleHistory.push({role: "assistant", content: data.reply});
+                } else {
+                    companionBubbleHistory.push({role: "assistant", content: "Sorry, I'm having trouble connecting right now. Please try again."});
+                }
+            } catch {
+                companionBubbleHistory = companionBubbleHistory.filter(m => m.role !== 'typing');
+                isTyping = false;
+                companionBubbleHistory.push({role: "assistant", content: "Network error. Please check your connection and try again."});
+            }
+
+            renderCompanionBubbleChat();
+        }
+
+// Start with bubble closed
+        document.getElementById('companion-bubble-body').hidden = true;    </script>
+</body>
+</html>
